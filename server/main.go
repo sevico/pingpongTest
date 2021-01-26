@@ -5,6 +5,7 @@ import (
 	"log"
 	"net"
 	"net/rpc"
+	"time"
 )
 
 func main() {
@@ -15,20 +16,21 @@ func main() {
 	if err != nil {
 		log.Fatal("ListenTCP error:", err)
 	}
-	conn, err := listener.Accept()
-	if err != nil {
-		log.Fatal("Accept error:", err)
-	}
-	rpc.ServeConn(conn)
+	for {
+		conn, err := listener.Accept()
+		if err != nil {
+			log.Fatal("Accept error:", err)
+		}
+		rpc.ServeConn(conn)
 
-	receive(dataListener, bench.Size, bench.ReminTimes)
+		receive(dataListener, bench.Size, bench.ReminTimes)
+	}
+
 }
 
 func receive(listener net.Listener, size, times int) {
 
 	fmt.Println(size, times)
-
-	defer listener.Close()
 
 	data := make([]byte, size, size)
 	conn, err := listener.Accept()
@@ -36,15 +38,17 @@ func receive(listener net.Listener, size, times int) {
 		fmt.Println(err)
 		return
 	}
+	defer conn.Close()
 	for i := 0; i < times; i++ {
 		n := 0
 		received := 0
 		for received = 0; received < size; received += n {
 			var err error
+			conn.SetDeadline(time.Now().Add(time.Second))
 			n, err = conn.Read(data[:size-received])
 			if err != nil {
 				fmt.Println(err)
-				break
+				return
 			}
 		}
 		fmt.Printf("receive %d size bytes\n", received)

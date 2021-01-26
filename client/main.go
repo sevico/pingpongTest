@@ -7,7 +7,9 @@ import (
 	"log"
 	"net"
 	"net/rpc"
-	"shiweikang/pingpongTestClient/model"
+	"time"
+
+	"github.com/sevico/pingpongTest/model"
 )
 
 var (
@@ -39,14 +41,16 @@ func main() {
 		log.Fatal(err)
 	}
 	client.Close()
-	sendToServer(ip, size, times)
-
+	iops := sendToServer(ip, size, times)
+	fmt.Printf("iops: %d\n", iops)
 }
-func sendToServer(ip string, size int, times int) {
+func sendToServer(ip string, size int, times int) int {
+
 	conn, err := net.Dial("tcp", ip+":14568")
 	if err != nil {
 		log.Fatal("dialing:", err)
 	}
+	t1 := time.Now()
 	randomBytes := make([]byte, size, size)
 	rand.Read(randomBytes)
 	for i := 0; i < times; i++ {
@@ -62,6 +66,8 @@ func sendToServer(ip string, size int, times int) {
 			log.Fatal(err)
 		}
 		fmt.Println(string(msg))
-
 	}
+	duration := time.Since(t1)
+	iops := float64(times) / duration.Seconds()
+	return int(iops)
 }

@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"shiweikang/pingpongTestClient/model"
+	"github.com/sevico/pingpongTest/model"
 )
 
 type BenchService struct {
